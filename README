@@ -1,0 +1,8 @@
+Description:
+	Simple PyGTK mass image resizing tool
+
+Dependencies:
+	Python 2.7
+	GTK+ 2.24
+	PyGTK 2.24
+	PIL 1.1.7
