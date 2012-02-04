@@ -25,6 +25,7 @@ class ImageResizer(object):
                     'on_height_rb_toggled' : lambda widget: self.on_radiobutton_changed('height_rb', widget.get_active()),
                     'on_width_rb_toggled' : lambda widget: self.on_radiobutton_changed('width_rb', widget.get_active()),
                     'on_percentual_rb_toggled' : lambda widget: self.on_radiobutton_changed('percentual_rb', widget.get_active()),
+                    'on_ratio_rb_toggled' : lambda widget: self.on_radiobutton_changed('ratio_rb', widget.get_active()),
                     'on_process_btn_clicked': self.on_process_btn_clicked,
                     'on_size_txt_focus_out_event': self.on_size_txt_focus_out_event,
                     'on_resize_smaller_chb_toggled': self.on_resize_smaller_chb_toggled,
@@ -71,13 +72,16 @@ class ImageResizer(object):
         elif widget_id == 'percentual_rb':
             self.unit_label.set_text('%')
             self.dimension = 'p'
+        elif widget_id == 'ratio_rb':
+            self.unit_label.set_text('')
+            self.dimension = 'r'
     
     def on_resize_smaller_chb_toggled(self, widget, data = None):
         self.resize_smaller = widget.get_active()
     
     def on_size_txt_focus_out_event(self, widget, data = None):
         text = widget.get_text()
-        if not text.isdigit():
+        if not text.isdigit() and self.dimension != 'r':
             text = ''.join([x for x in text if x.isdigit()])
             widget.set_text(text)
     
@@ -91,11 +95,17 @@ class ImageResizer(object):
             self.show_error_dialog('Zadejte rozměr!')
             return
         
-        try:
-            self.size = float(text)
-        except:
-            self.show_error_dialog('Zadaný rozměr nelze převést na desetinné číslo')
-            return
+        if self.dimension != 'r':
+            try:
+                self.size = float(text)
+            except:
+                self.show_error_dialog('Zadaný rozměr nelze převést na desetinné číslo')
+                return
+        else:
+            try:
+                self.size = map(float,map(str.strip, text.split('x')))
+            except:
+                self.show_error_dialog('Zadaný řetězec nelze převést na poměr s desetinnými čísly')
         
         self.main_window.set_sensitive(False)
         try:
@@ -148,24 +158,10 @@ class ImageResizer(object):
         
         print '\tOriginal size = ' + str(im.size) + ' px\n'
         
-        if self.dimension == 'p':
-            rate = self.size / 100
-        elif self.dimension == 'w':
-            rate = self.size / im.size[0]
-        elif self.dimension == 'h':
-            rate = self.size / im.size[1]
+        if self.dimension != 'r':
+            im = self.resize_image_base(im)
         else:
-            rate = 1
-        
-        print '\tRate = ' + str(rate) + '\n'
-        
-        width, height = im.size
-        width = int(width * rate)
-        height = int(height * rate)
-        
-        print '\tNew size = ' + str((width,height)) + ' px\n'
-        
-        im = im.resize((width, height))
+            im = self.resize_image_with_ratio(im)
         
         im.save(path)
         
@@ -186,8 +182,67 @@ class ImageResizer(object):
         md.run()
         md.hide()
         md.destroy()
-   
+    
+    def resize_image_base(self, im):
+        if self.dimension == 'p':
+            rate = self.size / 100
+        elif self.dimension == 'w':
+            rate = self.size / im.size[0]
+        elif self.dimension == 'h':
+            rate = self.size / im.size[1]
+        else:
+            rate = 1
+        
+        print '\tRate = ' + str(rate) + '\n'
+        
+        width, height = im.size
+        width = int(width * rate)
+        height = int(height * rate)
+        
+        print '\tNew size = ' + str((width, height)) + ' px\n'
+        
+        return im.resize((width, height))
+    
+    def resize_image_with_ratio(self, im):
+        if self.dimension != 'r':
+            return im # zadna zmena
+        
+        # u pomeru chci vzdy docilit vypoctu vetsi ku mensi strana
+        requested_ratio = self.size[0] / self.size[1] if self.size[0] > self.size[1] else self.size[1] / self.size[0]
+        im_ratio = float(im.size[0]) / im.size[1] if im.size[0] > im.size[1] else float(im.size[1]) / im.size[0]
+        
+        if requested_ratio == im_ratio:
+            return im # zadna zmena
+        
+        print '\tOriginal ratio = ' + str(im_ratio) + '\n'
+        print '\tRequested ratio = ' + str(requested_ratio) + '\n'
+        
+        # prevadeny obrazek muze byt navysku nebo na sirku, dle toho se musi upravit patricna strana
+        extended_dimension = None
+        if requested_ratio > im_ratio:
+            extended_dimension = int(im.size[0] <= im.size[1]) # chci vetsi - napr. [0] < [1] => true => int(true) = [1]; jsou-li si rovny, nezalezi ktery beru
+        else:
+            extended_dimension = int(im.size[0] >= im.size[1]) # chci mensi - napr. [0] < [1] => false => int(false) = [0]; jsou-li si rovny, nezalezi ktery beru
+        
+        new_size = [im.size[0], im.size[1]]
+        
+        # rozsirovanou stranu vzdy zvetsim, aby pod se dala dat byla vypln
+        new_size[extended_dimension] = int(new_size[int(not extended_dimension)] * requested_ratio / 2)
+            
+        print '\tNew size = ' + str(new_size) + ' px\n'
+        
+        new_image = Image.new(im.mode, new_size, (255,255,255))
+        
+        position_of_pasted_img = [0, 0]
+        # vkladany obrazek vycentruji na rozsirene strane
+        position_of_pasted_img[extended_dimension] = (new_size[extended_dimension] - im.size[extended_dimension]) / 2
+        
+        new_image.paste(im, tuple(position_of_pasted_img))
+        
+        return new_image
 
 if __name__ == '__main__':
+    os.chdir(os.path.dirname(sys.argv[0]))
+    
     app = ImageResizer()
     app.main()

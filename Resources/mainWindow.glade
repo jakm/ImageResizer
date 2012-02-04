@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.20"/>
-  <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="main_window">
+    <property name="can_focus">False</property>
     <property name="resizable">False</property>
     <signal name="delete-event" handler="on_main_window_delete_event" swapped="no"/>
     <child>
       <object class="GtkFixed" id="fixed1">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <child>
           <object class="GtkFileChooserButton" id="input_dir_chooser">
             <property name="width_request">300</property>
             <property name="height_request">30</property>
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="action">select-folder</property>
             <property name="title" translatable="yes">Zvolte adresář</property>
             <signal name="current-folder-changed" handler="on_input_dir_chooser_current_folder_changed" swapped="no"/>
@@ -45,6 +47,7 @@
             <property name="width_request">130</property>
             <property name="height_request">30</property>
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Maximální rozměr:</property>
           </object>
           <packing>
@@ -73,7 +76,7 @@
         </child>
         <child>
           <object class="GtkRadioButton" id="percentual_rb">
-            <property name="label" translatable="yes">Poměr</property>
+            <property name="label" translatable="yes">Poměr [%]</property>
             <property name="width_request">100</property>
             <property name="height_request">30</property>
             <property name="visible">True</property>
@@ -108,6 +111,7 @@
             <property name="width_request">40</property>
             <property name="height_request">30</property>
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">px</property>
           </object>
           <packing>
@@ -127,8 +131,8 @@
             <signal name="clicked" handler="on_process_btn_clicked" swapped="no"/>
           </object>
           <packing>
-            <property name="x">210</property>
-            <property name="y">170</property>
+            <property name="x">212</property>
+            <property name="y">230</property>
           </packing>
         </child>
         <child>
@@ -145,21 +149,42 @@
           </object>
           <packing>
             <property name="x">10</property>
-            <property name="y">170</property>
+            <property name="y">230</property>
           </packing>
         </child>
         <child>
           <object class="GtkAlignment" id="alignment1">
-            <property name="width_request">10</property>
-            <property name="height_request">10</property>
+            <property name="width_request">20</property>
+            <property name="height_request">20</property>
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
               <placeholder/>
             </child>
           </object>
           <packing>
-            <property name="x">310</property>
-            <property name="y">200</property>
+            <property name="x">312</property>
+            <property name="y">260</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="ratio_rb">
+            <property name="label" translatable="yes">Poměr [š x v]</property>
+            <property name="width_request">130</property>
+            <property name="height_request">31</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="use_action_appearance">False</property>
+            <property name="xalign">0</property>
+            <property name="active">True</property>
+            <property name="draw_indicator">True</property>
+            <property name="group">percentual_rb</property>
+            <signal name="toggled" handler="on_ratio_rb_toggled" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">10</property>
+            <property name="y">170</property>
           </packing>
         </child>
       </object>
