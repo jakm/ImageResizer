@@ -53,6 +53,8 @@ class ImageResizer(object):
         if not path:
             return
         
+        path = path.decode('utf8')
+        
         if not os.path.exists(path):
             self.show_error_dialog('Vybraná cesta neexistuje!')
             return
@@ -227,7 +229,7 @@ class ImageResizer(object):
         new_size = [im.size[0], im.size[1]]
         
         # rozsirovanou stranu vzdy zvetsim, aby pod se dala dat byla vypln
-        new_size[extended_dimension] = int(new_size[int(not extended_dimension)] * requested_ratio / 2)
+        new_size[extended_dimension] = int(new_size[int(not extended_dimension)] * requested_ratio)
             
         print '\tNew size = ' + str(new_size) + ' px\n'
         
@@ -242,7 +244,5 @@ class ImageResizer(object):
         return new_image
 
 if __name__ == '__main__':
-    os.chdir(os.path.dirname(sys.argv[0]))
-    
     app = ImageResizer()
     app.main()
